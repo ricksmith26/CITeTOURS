@@ -29,7 +29,7 @@ export default class App extends React.Component {
       error => this.setState({ error: error.message }),
       {
         enableHighAccuracy: true,
-        timeout: 20000,
+        timeout: 60000,
         maximumAge: 1000,
         distanceFilter: 10
       }

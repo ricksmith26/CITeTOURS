@@ -1,9 +1,16 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Button,
+  Animated,
+  TouchableWithoutFeedback
+} from 'react-native';
 import { MapView, Speech } from 'expo';
 import uAreHere from '../assets/uAreHere.png';
 import pin from '../assets/pin.png';
-// import TextToSpeechScreen from './Speech';
 
 export default class Map extends React.Component {
   constructor() {
@@ -45,6 +52,7 @@ export default class Map extends React.Component {
           latitudeDelta: 0.0322,
           longitudeDelta: 0.0181
         }}
+        showsCompass={true}
         mapType="satellite"
         ref={ref => {
           this.map = ref;
@@ -76,12 +84,18 @@ export default class Map extends React.Component {
               coordinate={coords}
               title={marker.title}
               description={`distance: ${marker.distance}m`}
-              onPress={() => {
-                this.setState({ request: true });
-              }}
-              showsCompass={true}
             >
-              <Image source={pin} />
+              <View style={styles.button}>
+                <Image source={pin} />
+                {this.state.request ? (
+                  <Button
+                    key={marker.pageid}
+                    title={'Play '}
+                    style={styles.button}
+                    onPress={console.log(marker.title, 'button press')}
+                  />
+                ) : null}
+              </View>
             </MapView.Marker>
           );
         })}
@@ -100,3 +114,12 @@ export default class Map extends React.Component {
     );
   }
 }
+
+const styles = {
+  button: {
+    width: '100%',
+    paddingTop: 5,
+    paddingBottom: 5,
+    borderRadius: 7
+  }
+};
