@@ -84,6 +84,21 @@ export default class Map extends React.Component {
               coordinate={coords}
               title={marker.title}
               description={`distance: ${marker.distance}m`}
+              onPress={() =>
+                this.map.fitToCoordinates(
+                  [
+                    {
+                      latitude: this.props.latitude,
+                      longitude: this.props.longitude
+                    },
+                    coords
+                  ],
+                  {
+                    edgePadding: { top: 30, right: 5, bottom: 5, left: 10 },
+                    animated: true
+                  }
+                )
+              }
             >
               <View style={styles.button}>
                 <Image source={pin} />
