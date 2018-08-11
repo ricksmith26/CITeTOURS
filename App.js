@@ -1,5 +1,13 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image, Button, Slider } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Button,
+  Slider,
+  SafeAreaView
+} from 'react-native';
 import { MapView } from 'expo';
 import logo from './assets/logo.png';
 import Map from './Components/Map';

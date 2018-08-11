@@ -44,7 +44,7 @@ export default class TextToSpeechScreen extends React.Component {
   };
 
   state = {
-    selectedExample: EXAMPLES[0],
+    selectedExample: { language: 'en', text: 'Hello world' },
     inProgress: false,
     pitch: 1,
     rate: 0.75
@@ -54,28 +54,27 @@ export default class TextToSpeechScreen extends React.Component {
     return (
       <View style={styles.container}>
         <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>Select a phrase</Text>
+          <View style={styles.controlRow}>
+            <Button
+              disabled={this.state.inProgress}
+              onPress={this._speak}
+              title="Speak"
+            />
+
+            <Button
+              disabled={!this.state.inProgress}
+              onPress={this._stop}
+              title="Stop"
+            />
+          </View>
+          <Text style={styles.headerText}>{this.props.title}</Text>
         </View>
 
         <View style={styles.examplesContainer}>
-          {EXAMPLES.map(this._renderExample)}
+          {[this.props.tour].map(this._renderExample)}
         </View>
 
         <View style={styles.separator} />
-
-        <View style={styles.controlRow}>
-          <Button
-            disabled={this.state.inProgress}
-            onPress={this._speak}
-            title="Speak"
-          />
-
-          <Button
-            disabled={!this.state.inProgress}
-            onPress={this._stop}
-            title="Stop"
-          />
-        </View>
 
         <Text style={styles.controlText}>
           Pitch: {this.state.pitch.toFixed(2)}

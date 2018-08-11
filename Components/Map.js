@@ -6,11 +6,13 @@ import {
   Image,
   Button,
   Animated,
-  TouchableWithoutFeedback
+  TouchableOpacity
 } from 'react-native';
-import { MapView, Speech } from 'expo';
+import { MapView, Speech, Marker } from 'expo';
 import uAreHere from '../assets/uAreHere.png';
 import pin from '../assets/pin.png';
+import TextToSpeechScreen from './Speech';
+import superagent from 'superagent';
 
 export default class Map extends React.Component {
   constructor() {
@@ -18,7 +20,10 @@ export default class Map extends React.Component {
     this.map = null;
   }
   state = {
-    request: false
+    request: false,
+    pageid: 0,
+    tour: {},
+    title: ''
   };
 
   componentDidMount() {
@@ -35,106 +40,170 @@ export default class Map extends React.Component {
   }
 
   render() {
-    console.log(this.state.request);
+    console.log(this.state.pageid, '<<<<<<<<<<<,,,');
     const fit = this.props.marker.map(function(m) {
       return {
         latitude: m.coordinate.latitude,
         longitude: m.coordinate.longitude
       };
     });
-
-    return (
-      <MapView
-        style={{ flex: 1 }}
-        initialRegion={{
-          latitude: this.props.latitude,
-          longitude: this.props.longitude,
-          latitudeDelta: 0.0322,
-          longitudeDelta: 0.0181
-        }}
-        showsCompass={true}
-        mapType="satellite"
-        ref={ref => {
-          this.map = ref;
-        }}
-        onMapReady={() =>
-          this.map.fitToCoordinates(
-            [
-              {
-                latitude: this.props.latitude,
-                longitude: this.props.longitude
-              },
-              ...fit
-            ],
-            {
-              edgePadding: { top: 30, right: 5, bottom: 5, left: 10 },
-              animated: true
-            }
-          )
-        }
-      >
-        {this.props.marker.map(marker => {
-          const coords = {
-            latitude: marker.coordinate.latitude,
-            longitude: marker.coordinate.longitude
-          };
-          return (
-            <MapView.Marker
-              key={marker.pageid}
-              coordinate={coords}
-              title={marker.title}
-              description={`distance: ${marker.distance}m`}
-              onPress={() =>
-                this.map.fitToCoordinates(
-                  [
-                    {
-                      latitude: this.props.latitude,
-                      longitude: this.props.longitude
-                    },
-                    coords
-                  ],
-                  {
-                    edgePadding: { top: 30, right: 5, bottom: 5, left: 10 },
-                    animated: true
-                  }
-                )
-              }
-            >
-              <View style={styles.button}>
-                <Image source={pin} />
-                {this.state.request ? (
-                  <Button
-                    key={marker.pageid}
-                    title={'Play '}
-                    style={styles.button}
-                    onPress={console.log(marker.title, 'button press')}
-                  />
-                ) : null}
-              </View>
-            </MapView.Marker>
-          );
-        })}
-        <MapView.Marker
-          key={'You are here'}
-          coordinate={{
+    if (!this.state.request) {
+      return (
+        <MapView
+          style={{ flex: 1 }}
+          initialRegion={{
             latitude: this.props.latitude,
-            longitude: this.props.longitude
+            longitude: this.props.longitude,
+            latitudeDelta: 0.0322,
+            longitudeDelta: 0.0181
           }}
-          title={'You are here'}
-          description={'You are here'}
+          pitchEnabled={true}
+          showsCompass={true}
+          mapType="satellite"
+          ref={ref => {
+            this.map = ref;
+          }}
+          showsBuildings={true}
+          onMapReady={() =>
+            this.map.fitToCoordinates(
+              [
+                {
+                  latitude: this.props.latitude,
+                  longitude: this.props.longitude
+                },
+                ...fit
+              ],
+              {
+                edgePadding: { top: 150, right: 5, bottom: 5, left: 10 },
+                animated: true
+              }
+            )
+          }
         >
-          <Image source={uAreHere} />
-        </MapView.Marker>
-      </MapView>
-    );
+          {this.props.marker.map(marker => {
+            const coords = {
+              latitude: marker.coordinate.latitude,
+              longitude: marker.coordinate.longitude
+            };
+            return (
+              <MapView.Marker
+                style={styles.map}
+                key={marker.pageid}
+                coordinate={coords}
+                description={`distance: ${marker.distance}m`}
+                longPressDelay={1000}
+                onLongPress={() => {
+                  console.log('hit');
+                }}
+                onPress={() => {
+                  this.map.fitToCoordinates(
+                    [
+                      {
+                        latitude: this.props.latitude,
+                        longitude: this.props.longitude
+                      },
+                      coords
+                    ],
+                    {
+                      edgePadding: {
+                        top: 150,
+                        right: 5,
+                        bottom: 5,
+                        left: 10
+                      },
+                      animated: true
+                    }
+                  );
+                  this.setState({ pageid: marker.pageid, title: marker.title });
+                }}
+              >
+                <View style={styles.pin}>
+                  <Text>{marker.title}</Text>
+                  <Text style={styles.meters}>{marker.distance}m</Text>
+                </View>
+
+                <View style={styles.button}>
+                  <Image source={pin} />
+                </View>
+              </MapView.Marker>
+            );
+          })}
+          <MapView.Marker
+            key={'You are here'}
+            coordinate={{
+              latitude: this.props.latitude,
+              longitude: this.props.longitude
+            }}
+            onPress={() => {
+              superagent
+                .get(
+                  `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&pageids=${
+                    this.state.pageid
+                  }rvsection=0action=raw`
+                )
+
+                .end((error, response) => {
+                  if (error) {
+                    console.error(error);
+                  } else {
+                    const reg = new RegExp('/[0-9]/');
+                    const t = JSON.parse(response.text);
+                    const m = t.query.pages;
+                    const tour = m[this.state.pageid].extract
+                      .replace(
+                        /<b>|<\/p>|<\/b>|<h2>|<\/h2>|<p>|<span id=|<\/[a-z]+>|<[a-z]+>|<p class="mw-empty-elt">/g,
+                        ''
+                      )
+                      .replace(/"References">References\s\D+\s?\d?/gi, '');
+                    this.setState({
+                      tour: { language: 'en', text: tour }
+                    });
+                    this.setState({ request: true });
+                  }
+                });
+            }}
+          >
+            <View style={styles.uAreHere}>
+              <Text style={styles.text}>You are here</Text>
+            </View>
+            <Image source={uAreHere} />
+          </MapView.Marker>
+        </MapView>
+      );
+    } else {
+      return (
+        <TextToSpeechScreen tour={this.state.tour} title={this.state.title} />
+      );
+    }
   }
 }
 
 const styles = {
   button: {
-    width: '100%',
-    paddingTop: 5,
-    paddingBottom: 5,
-    borderRadius: 7
+    zIndex: 99
+  },
+  pin: {
+    backgroundColor: '#DEE9FC',
+    padding: 4,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#091834'
+  },
+  meters: {
+    fontSize: 10
+  },
+  uAreHere: {
+    backgroundColor: '#6395F2',
+    padding: 4,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#DEE9FC'
+  },
+  text: {
+    color: '#DEE9FC'
   }
 };
