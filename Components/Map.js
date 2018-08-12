@@ -22,7 +22,7 @@ export default class Map extends React.Component {
   state = {
     request: false,
     pageid: 0,
-    tour: {},
+    tour: [],
     title: ''
   };
 
@@ -40,7 +40,6 @@ export default class Map extends React.Component {
   }
 
   render() {
-    console.log(this.state.pageid, '<<<<<<<<<<<,,,');
     const fit = this.props.marker.map(function(m) {
       return {
         latitude: m.coordinate.latitude,
@@ -91,10 +90,6 @@ export default class Map extends React.Component {
                 key={marker.pageid}
                 coordinate={coords}
                 description={`distance: ${marker.distance}m`}
-                longPressDelay={1000}
-                onLongPress={() => {
-                  console.log('hit');
-                }}
                 onPress={() => {
                   this.map.fitToCoordinates(
                     [
@@ -114,11 +109,14 @@ export default class Map extends React.Component {
                       animated: true
                     }
                   );
-                  this.setState({ pageid: marker.pageid, title: marker.title });
+                  this.setState({
+                    pageid: marker.pageid,
+                    title: marker.title
+                  });
                 }}
               >
                 <View style={styles.pin}>
-                  <Text>{marker.title}</Text>
+                  <Text style={styles.text1}>{marker.title}</Text>
                   <Text style={styles.meters}>{marker.distance}m</Text>
                 </View>
 
@@ -141,7 +139,6 @@ export default class Map extends React.Component {
                     this.state.pageid
                   }rvsection=0action=raw`
                 )
-
                 .end((error, response) => {
                   if (error) {
                     console.error(error);
@@ -149,22 +146,28 @@ export default class Map extends React.Component {
                     const reg = new RegExp('/[0-9]/');
                     const t = JSON.parse(response.text);
                     const m = t.query.pages;
-                    const tour = m[this.state.pageid].extract
+                    const tourText = m[this.state.pageid].extract
                       .replace(
                         /<b>|<\/p>|<\/b>|<h2>|<\/h2>|<p>|<span id=|<\/[a-z]+>|<[a-z]+>|<p class="mw-empty-elt">/g,
                         ''
                       )
-                      .replace(/"References">References\s\D+\s?\d?/gi, '');
-                    this.setState({
-                      tour: { language: 'en', text: tour }
+                      .replace(/("References">References)(.*)/gi, '')
+                      .replace(/(>"Sources">Sources)(.*)/i, '')
+                      .replace(/(<)(.*)/gi, '')
+                      .split(/>/);
+                    const tour = tourText.map(function(tour) {
+                      return { language: 'en', text: tour };
                     });
+                    this.setState({ tour });
                     this.setState({ request: true });
                   }
                 });
             }}
           >
             <View style={styles.uAreHere}>
-              <Text style={styles.text}>You are here</Text>
+              <Text style={styles.text}>Hi I'm Cindy, tap a</Text>
+              <Text style={styles.text}>location then tap</Text>
+              <Text style={styles.text}> me to start</Text>
             </View>
             <Image source={uAreHere} />
           </MapView.Marker>
@@ -183,18 +186,6 @@ const styles = {
     zIndex: 99
   },
   pin: {
-    backgroundColor: '#DEE9FC',
-    padding: 4,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#091834'
-  },
-  meters: {
-    fontSize: 10
-  },
-  uAreHere: {
     backgroundColor: '#6395F2',
     padding: 4,
     borderRadius: 5,
@@ -203,7 +194,23 @@ const styles = {
     borderWidth: 1,
     borderColor: '#DEE9FC'
   },
+  meters: {
+    fontSize: 10,
+    color: '#DEE9FC'
+  },
+  uAreHere: {
+    backgroundColor: '#DEE9FC',
+    padding: 4,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#091834'
+  },
   text: {
+    color: '#091834'
+  },
+  text1: {
     color: '#DEE9FC'
   }
 };

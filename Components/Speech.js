@@ -1,14 +1,15 @@
 import React from 'react';
-import { Text, Button, StyleSheet, View } from 'react-native';
+import {
+  Text,
+  Button,
+  StyleSheet,
+  View,
+  ScrollView,
+  Image
+} from 'react-native';
 import { Constants, Speech } from 'expo';
-import Touchable from 'react-native-platform-touchable'; // 1.1.1
-
-const EXAMPLES = [
-  { language: 'en', text: 'Hello world' },
-  { language: 'es', text: 'Hola mundo' },
-  { language: 'en', text: 'Charlie Cheever chased a chortling choosy child' },
-  { language: 'en', text: 'Adam Perry ate a pear in pairs in Paris' }
-];
+import Touchable from 'react-native-platform-touchable';
+import logo from '../assets/logo.png';
 
 if (!Constants.isDevice) {
   alert(
@@ -44,7 +45,7 @@ export default class TextToSpeechScreen extends React.Component {
   };
 
   state = {
-    selectedExample: { language: 'en', text: 'Hello world' },
+    selectedExample: {},
     inProgress: false,
     pitch: 1,
     rate: 0.75
@@ -54,6 +55,7 @@ export default class TextToSpeechScreen extends React.Component {
     return (
       <View style={styles.container}>
         <View style={styles.headerContainer}>
+          <Image source={logo} style={{ width: 150, height: 150 }} />
           <View style={styles.controlRow}>
             <Button
               disabled={this.state.inProgress}
@@ -69,49 +71,14 @@ export default class TextToSpeechScreen extends React.Component {
           </View>
           <Text style={styles.headerText}>{this.props.title}</Text>
         </View>
-
-        <View style={styles.examplesContainer}>
-          {[this.props.tour].map(this._renderExample)}
+        <View style={styles.instructions}>
+          <Text>Tap a section below and press speak to start</Text>
         </View>
-
-        <View style={styles.separator} />
-
-        <Text style={styles.controlText}>
-          Pitch: {this.state.pitch.toFixed(2)}
-        </Text>
-        <View style={styles.controlRow}>
-          <AmountControlButton
-            onPress={this._increasePitch}
-            title="Increase"
-            disabled={this.state.inProgress}
-          />
-
-          <Text>/</Text>
-
-          <AmountControlButton
-            onPress={this._decreasePitch}
-            title="Decrease"
-            disabled={this.state.inProgress}
-          />
-        </View>
-
-        <Text style={styles.controlText}>
-          Rate: {this.state.rate.toFixed(2)}
-        </Text>
-        <View style={styles.controlRow}>
-          <AmountControlButton
-            onPress={this._increaseRate}
-            title="Increase"
-            disabled={this.state.inProgress}
-          />
-
-          <Text>/</Text>
-          <AmountControlButton
-            onPress={this._decreaseRate}
-            title="Decrease"
-            disabled={this.state.inProgress}
-          />
-        </View>
+        <ScrollView>
+          <View style={styles.examplesContainer}>
+            {this.props.tour.map(this._renderExample)}
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -126,8 +93,8 @@ export default class TextToSpeechScreen extends React.Component {
 
     Speech.speak(this.state.selectedExample.text, {
       language: this.state.selectedExample.language,
-      pitch: this.state.pitch,
-      rate: this.state.rate,
+      pitch: 1,
+      rate: 0.75,
       onStart: start,
       onDone: complete,
       onStopped: complete,
@@ -137,34 +104,6 @@ export default class TextToSpeechScreen extends React.Component {
 
   _stop = () => {
     Speech.stop();
-  };
-
-  _increasePitch = () => {
-    this.setState(state => ({
-      ...state,
-      pitch: state.pitch + 0.1
-    }));
-  };
-
-  _increaseRate = () => {
-    this.setState(state => ({
-      ...state,
-      rate: state.rate + 0.1
-    }));
-  };
-
-  _decreasePitch = () => {
-    this.setState(state => ({
-      ...state,
-      pitch: state.pitch - 0.1
-    }));
-  };
-
-  _decreaseRate = () => {
-    this.setState(state => ({
-      ...state,
-      rate: state.rate - 0.1
-    }));
   };
 
   _renderExample = (example, i) => {
@@ -194,25 +133,27 @@ export default class TextToSpeechScreen extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 35
+    paddingTop: 25
   },
   separator: {
     height: 1,
-    backgroundColor: '#eee',
+    backgroundColor: '#6395F2',
     marginTop: 0,
     marginBottom: 15
   },
   headerText: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 5
+    marginBottom: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   headerContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    marginHorizontal: 20,
-    marginBottom: 0,
-    marginTop: 20
+    borderBottomColor: '#6395F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6395F2'
   },
   exampleText: {
     fontSize: 15,
@@ -222,7 +163,8 @@ const styles = StyleSheet.create({
   examplesContainer: {
     paddingTop: 15,
     paddingBottom: 10,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
+    backgroundColor: '#DEE9FC'
   },
   selectedExampleText: {
     color: 'black'
@@ -238,5 +180,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10
+  },
+  instructions: {
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 });

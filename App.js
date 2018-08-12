@@ -20,9 +20,7 @@ export default class App extends React.Component {
     error: null,
     request: false,
     distance: 1500,
-    markers: [],
-    latDel: 0,
-    longDel: 0
+    markers: []
   };
 
   componentDidMount() {
@@ -58,9 +56,6 @@ export default class App extends React.Component {
           } else {
             this.setState({ landmarks: JSON.parse(response.text) });
             const landmarks = { ...this.state.landmarks.query };
-            let del = 0;
-            let latDel = 0;
-            let longDel = 0;
             const markers = landmarks.geosearch.map(function(l) {
               const marker = {
                 coordinate: {
@@ -71,16 +66,10 @@ export default class App extends React.Component {
                 distance: l.dist,
                 pageid: l.pageid
               };
-              if (l.dist > del) {
-                del = l.dist;
-                latDel = l.lat;
-                longDel = l.lon;
-              }
-
               return marker;
             });
 
-            this.setState({ markers, latDel, longDel });
+            this.setState({ markers });
           }
         });
     }
@@ -95,24 +84,26 @@ export default class App extends React.Component {
           <Image source={logo} />
           <Text>Search radius: {this.state.distance}m</Text>
           <Text>{'\n'}</Text>
-          <Slider
-            style={{
-              width: 300,
-              height: 30,
-              borderRadius: 50,
-              backgroundColor: '#091834',
-              color: '#091834'
-            }}
-            step={50}
-            minimumValue={250}
-            maximumValue={3000}
-            width={200}
-            value={1500}
-            onValueChange={changedVal => {
-              this.setState({ distance: changedVal });
-            }}
-            style={styles.slider}
-          />
+          <View>
+            <Slider
+              style={{
+                width: 300,
+                height: 30,
+                borderRadius: 50,
+                minimumTrackTintColor: '#091834'
+              }}
+              style={{ width: 300 }}
+              step={50}
+              minimumValue={250}
+              maximumValue={3000}
+              width={200}
+              value={1500}
+              onValueChange={changedVal => {
+                this.setState({ distance: changedVal });
+              }}
+              style={styles.slider}
+            />
+          </View>
           <Text>{'\n'}</Text>
           <Text>{'\n'}</Text>
           <View style={styles.latLongWindow}>
